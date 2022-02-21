@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script src="createtable.js"></script>
+    <script src="filltable.js"></script>
+    <title>Table</title>
+  </head>
+  <body>
+    <div class="flex-container">
+    <!-- create block with table -->
+      <div class="flex-item" id="tabledata">
+        <!-- create block with button to control the displayed columns -->
+        <div id="ctrlCols">
+          <button id="ctrlBtn" type = button onclick="showControls()">Show control</button>
+        </div>
+        <!-- create block with buttons to move through the pages of the table -->
+        <div id="pageControl">
+          <button id="prev" type="button" onclick="prevPage()" disabled>Previous</button>
+          <button id="next" type="button" onclick="nextPage()">Next</button>
+        </div>
+      </div>
+      <!-- create form block to modify table data -->
+      <div class="flex-item">
+        <form id="dataform">
+          <fieldset id="dataset">
+            <legend>Data form</legend>
+            <label for="id">ID:</label>
+            <input id="id" type="text" disabled></input>
+            <label for="firstName">First name:</label>
+            <input id="firstName" type="text" disabled></input>
+            <label for="lastName">Last name:</label>
+            <input id="lastName" type="text" disabled></input>
+            <label for="phone">Phone:</label>
+            <input id="phone" type="tel" disabled></input>
+            <label for="about">About:</label>
+            <textarea id="about" disabled></textarea>
+            <label for="eyeColor">Eye color:</label>
+            <input id="eyeColor" type="text" disabled></input>
+            <button type="button" onclick="confirmation()" type="submit">Ok</button>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+    <script>
+      //get link to json document
+      var requestURL = "https://raw.githubusercontent.com/Nikita09541/infotecsTestTask/main/data.json";
+      //declare array of objects (persons)
+      var obj = null;
+      //create an XMLHttpRequest object
+      var request = new XMLHttpRequest();
+      request.onload = function() {
+        //fill an array of objects
+        obj = request.response;
+        //create table with 4 columns and 10 empty rows
+        createTable(["name", "about", "eyeColor"]);
+        //fill the table with the first 10 values
+        fillTable(10);
+      }
+      //specify the type of request
+      request.open('GET', requestURL);
+      request.responseType = 'json';
+      //send the request to the server
+      request.send();
+      
+      //declare the number of the last displayed item variable
+      var count = 0;
+      //declare variable of the clicked table cell
+      var cell = null;
+      
+      //create table element and insert it before the page control buttons
+      const tableNode = document.createElement("TABLE");
+      const container = document.getElementById("tabledata");
+      const pageControl = document.getElementById("pageControl");
+      container.insertBefore(tableNode, pageControl);
+      //get table column control element and bind a column select form to it
+      const ctrlCols = document.getElementById("ctrlCols");
+      const controlCols = document.createElement("FORM");
+      controlCols.setAttribute("id", "controlCols");
+      controlCols.style.display = "none";
+      ctrlCols.appendChild(controlCols);
+      //get form element to modify table data
+      const dataForm = document.getElementById("dataform");
+      
+	  //function to clear table cells
+      function clearTable() {
+        for (let i = 0; i < 10; i++) {
+          //get table row element
+          const tr = document.getElementById(i);
+          for (let j = 0; j < tr.childElementCount; j++) {
+            //replace text in each cell with an empty string
+            tr.children[j].innerText = "";
+          }
+        }
+      }
+      
+      //function to show/hide a column select form
+      function showControls() {
+        controlCols.style.display = controlCols.style.display === "none" ? "block" : "none";
+      }
+      
+      //function to display the previous page of the table
+      function prevPage() {
+        count -= 10;
+        if (count >= 0) {
+          //clear current data and load it from previous page
+          clearTable()
+          fillTable(10);
+          //display all 10 table rows
+          for (let i = obj.length - 10; i < 10; i++) {
+            document.getElementById(i).style.display = "table-row";
+          }
+        }
+        //disable button "Previous" when returning to first page
+        if (count === 0) {
+          document.getElementById("prev").disabled = true;
+        }
+        //enable button "Next" when returning from last page
+        document.getElementById("next").disabled = false;
+      }
+      
+      //function display the next page of the table
+      function nextPage() {
+        count += 10;
+        //clear current data
+        clearTable();
+        //enable button "Previous"
+        document.getElementById("prev").disabled = false;
+        //fill the required number of rows and hide the empty ones
+        if (obj.length - count > 10) {
+          fillTable(10);
+        }					
+        else {
+          //disable button "Next" when display last page
+          document.getElementById("next").disabled = true;
+          fillTable(obj.length - count);
+          //hide empty rows
+          for (let i = obj.length - 10; i < 10; i++) {
+            document.getElementById(i).style.display = "none";
+          }
+        }
+      }
+      
+      //function to confirm changes to the table
+      function confirmation() {
+        //get parent element for clicked cell
+        const tr = cell.parentNode;
+        for (let i = 0; i < tr.children.length; i++) {
+          //get the name of the property according to the id of the column into which the data is inserted
+          const data = tr.children[i].id.slice(0, tr.children[i].id.length - 1);
+          //fill out the form depending on the enabled input elements
+          switch (data) {
+            //case for first name and last name elements
+            case "firstName":
+            case "lastName": {
+              if (document.getElementById(data).disabled !== true) {
+                //make changes to the corresponding element of the data array
+                obj[count + Number(tr.id)]["name"][data] = document.getElementById(data).value;
+                //make changes to the corresponding table cell
+                tr.children[i].innerText = obj[count + Number(tr.id)]["name"][data];
+                //null and disable input field
+                document.getElementById(data).value = "";
+                document.getElementById(data).disabled = true;
+              }
+            }
+            break;
+		    //case for "about" element
+            case "about": {
+              if (document.getElementById(data).disabled !== true) {
+                //make changes to the corresponding element of the data array
+                obj[count + Number(tr.id)][data] = document.getElementById(data).value;
+                //cut data and fill corresponding cell
+                tr.children[i].innerText = obj[count + Number(tr.id)][data].slice(0,110).concat("...");
+                document.getElementById(data).value = "";
+                document.getElementById(data).disabled = true;
+              }
+            }
+            break;
+            //colorize the column "eyeColor" cells with the appropriate color
+            case "eyeColor": {
+              if (document.getElementById(data).disabled !== true) {
+                obj[count + Number(tr.id)][data] = document.getElementById(data).value;
+                //fill cell with new color
+                tr.children[i].style.backgroundColor = obj[count + Number(tr.id)][data];
+                document.getElementById(data).value = "";
+                document.getElementById(data).disabled = true;
+              }	
+            }
+            break;
+            //default option
+            default: {
+              if (document.getElementById(data).disabled !== true) {
+                //make changes to the corresponding element of the data array
+                obj[count + Number(tr.id)][data] = document.getElementById(data).value;
+                //make changes to the corresponding table cell
+                tr.children[i].innerText = obj[count + Number(tr.id)][data];
+                //null and disable input field
+                document.getElementById(data).value = "";
+                document.getElementById(data).disabled = true;
+              }	
+            }
+          }
+        }
+        //hide table cell edit form
+        dataForm.style.display = "none";
+        //get array of control checkboxes
+        const controlElem = controlCols.querySelectorAll("input[type=checkbox]");
+        for (let i = 0; i < controlElem.length; i++) {
+          //return the ability to change the number of columns
+          controlElem[i].disabled = false;
+        }
+      }
+    
+      //function to add/remove table columns
+      function columnCountMod() {
+        const input = event.target.id;
+        const label = controlCols.querySelector('label[for="' + input + '"]');
+        const labeldata = label.innerText;
+        //if checked property is true then add column
+        if (document.getElementById("input" + labeldata).checked == true) {
+          //get table header row element
+          const thead = document.getElementById("thead");
+          //create a new header cell, fill it with data and assign an id
+          const th = document.createElement("TH");
+          th.setAttribute("id", "th"  + labeldata);
+          const thdata = document.createTextNode(labeldata);
+          th.appendChild(thdata);
+          thead.appendChild(th);
+          //create cells elements
+          for (let i = 0; i < 10; i++) {
+            const td = document.createElement("TD");
+            //set an id and attach to the row object
+            td.setAttribute("id", labeldata + i);
+            document.getElementById(i).appendChild(td);
+            //enter the data into the cell
+            switch (labeldata) {
+              case "firstName":
+              case "lastName": {
+                const tddata = document.createTextNode(obj[count + i]["name"][labeldata]);
+                td.appendChild(tddata);
+              }
+              break;
+              case "about": {
+                const tddata = document.createTextNode(obj[count + i][labeldata].slice(0,110).concat("..."));
+                td.appendChild(tddata);
+              }
+              break;
+              //colorize the column "eyeColor" cells with the appropriate color
+              case "eyeColor": {
+                td.style.backgroundColor = obj[count + i][labeldata];
+              }
+              break;
+              //default option
+              default: {
+                const tddata = document.createTextNode(obj[count + i][labeldata]);
+                td.appendChild(tddata);
+              }
+            }
+          }
+          //otherwise, remove the column
+        } else {
+          //get table header row element
+          const thead = document.getElementById("thead");
+          //get required column header
+          const thcol = document.getElementById("th" + labeldata);
+          //remove column header
+          thead.removeChild(thcol);
+          //remove table cells
+          for (let i = 0; i < 10; i++) {
+            const tr = document.getElementById(i);
+            const td = document.getElementById(labeldata + i);
+            tr.removeChild(td);
+          }
+        }
+      }
+    
+      //function to handle clicking on a table cell
+      tableNode.onclick = function(event) {
+        //disable the ability to change the number of table columns
+        const controlElem = controlCols.querySelectorAll("input[type=checkbox]");
+        for (let i = 0; i < controlElem.length; i++) {
+          controlElem[i].disabled = true;
+        }
+        //get clicked cell object
+        cell = event.target;
+        switch(cell.nodeName) {
+          //if the cell does not belong to the header
+          case "TD":
+            //display data change form
+            dataForm.style.display = "block";
+            //get the row object corresponding to the clicked cell
+            let tr = cell.parentNode;
+            for (let i = 0; i < tr.children.length; i++) {
+             //get the name of the property according to the id of the column into which the data is inserted
+              const data = tr.children[i].id.slice(0, tr.children[i].id.length - 1);
+              //fill out the form depending on the table header
+              switch (data) {
+                //get data about last name or first name
+                case "firstName":
+                case "lastName": {
+                  document.getElementById(data).value = obj[count + Number(tr.id)]["name"][data];
+                  //enable input for changes
+                  document.getElementById(data).disabled = false;
+                }
+                break;
+                //default option for all other properties
+                default: {
+                  document.getElementById(data).value = obj[count + Number(tr.id)][data];
+                  document.getElementById(data).disabled = false;
+                }
+              }
+            }
+            break;
+            //ascending sort data by click on the corresponding header
+            case "TH":
+              switch (cell.innerText) {
+                //sort by first or last name
+                case "firstName":
+                case "lastName": {
+                  obj.sort(function(a, b) {
+                    let x = a["name"][cell.innerText].toLowerCase();
+                    let y = b["name"][cell.innerText].toLowerCase();
+                    if (x < y) {return -1;}
+                    if (x > y) {return 1;}
+                    return 0;
+                  });
+                  //clear the table and write sorted data
+                  clearTable();
+                  if (obj.length - count >= 10) {
+                    fillTable(10);
+                  }					
+                  else {
+                    fillTable(obj.length - count);
+                  }
+                }
+                break;
+                //sort for other headers
+                default: {
+                  obj.sort(function(a, b) {
+                    let x = a[cell.innerText].toLowerCase();
+                    let y = b[cell.innerText].toLowerCase();
+                    if (x < y) {return -1;}
+                    if (x > y) {return 1;}
+                    return 0;
+                  });
+                  //clear the table and write sorted data
+                  clearTable();
+                  if (obj.length - count >= 10) {
+                    fillTable(10);
+                  }					
+                  else {
+                    fillTable(obj.length - count);
+                  }
+                }
+              }
+					
+        }	
+      }
+    </script>
+  </body>
+</html>

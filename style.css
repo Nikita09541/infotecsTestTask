@@ -1,0 +1,102 @@
+* {
+  box-sizing: border-box;
+  font-family: 'Courier new', monospace;
+  font-size: 1vw;
+}
+
+.flex-container {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: flex-start;
+  position: relative;
+}
+
+.flex-item {
+  width: 50%;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+th {
+  padding: 2px;
+  border: 1px solid #ddd;
+  background-color: #04AA6D;
+  color: white;
+}
+
+td {
+  border: 1px solid #ddd;
+  word-break: break-all;
+}
+
+tr:nth-child(even)
+{
+  background-color: #f2f2f2;
+}
+
+tr:hover 
+{
+  background-color: #ddd;
+}
+
+button {
+  background-color: #04AA6D;
+  color: white;
+  border: 1px solid #ddd;
+  padding: 1.5% 3%;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+button:disabled {
+  background-color: #f2f2f2;
+  color: black;
+}
+
+#control button {
+  display: inline-block;
+  float: left;
+}
+
+button:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+#dataform {
+  display: none;
+}
+
+#dataform input[type=text], textarea {
+  width: 50%;
+  padding: 2px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  display: block;
+}
+
+#dataform textarea {
+  height: 100px;
+}
+
+#dataform label {
+  padding: 2px 2px 2px 0;
+  display: block;
+}
+
+#dataform button {
+  display: block;
+  float: right;
+}
+
+#ctrlColsBtn {
+  position: relative;
+}
+
+#controlCols {
+  display: none;
+  position: absolute;
+  background-color: #f2f2f2;
+}
